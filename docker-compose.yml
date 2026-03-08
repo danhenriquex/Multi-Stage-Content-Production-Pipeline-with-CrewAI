@@ -1,0 +1,114 @@
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-content}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-content_pipeline}
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./configs/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-content} -d ${POSTGRES_DB:-content_pipeline}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8011:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: configs/mlflow/Dockerfile
+    ports:
+      - "5050:5000"
+    environment:
+      MLFLOW_ARTIFACT_ROOT: /mlflow/artifacts
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
+      - mlflow_db:/mlflow/db
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:////mlflow/db/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5000/api/2.0/mlflow/experiments/search"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ── Application ─────────────────────────────────────────────────────────────
+
+  api:
+    build:
+      context: .
+      dockerfile: src/api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      POSTGRES_USER: ${POSTGRES_USER:-content}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-content_pipeline}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  dagster:
+    build:
+      context: .
+      dockerfile: src/dagster_pipeline/Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      POSTGRES_USER: ${POSTGRES_USER:-content}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-content_pipeline}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DAGSTER_HOME: /dagster_home
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./dagster_home:/dagster_home
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  chroma_data:
+  mlflow_artifacts:
+  mlflow_db:
