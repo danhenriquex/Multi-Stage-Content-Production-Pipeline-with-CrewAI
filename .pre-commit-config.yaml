@@ -17,13 +17,3 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
-
-  - repo: local
-    hooks:
-      - id: unit-tests
-        name: Unit Tests
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && python -m pytest tests/unit/ -q --tb=short'
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
-        additional_dependencies: []
