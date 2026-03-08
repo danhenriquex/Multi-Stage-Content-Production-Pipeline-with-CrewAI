@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint
+        run: ruff check src/ tests/
+
+      - name: Format check
+        run: ruff format --check src/ tests/
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install \
+            pytest pytest-cov pytest-asyncio \
+            pydantic pydantic-settings \
+            crewai crewai-tools \
+            langchain-openai langchain-community \
+            mlflow structlog textstat \
+            psycopg2-binary ddgs \
+            fastapi httpx
+
+      - name: Run unit tests
+        run: |
+          uv run pytest tests/unit/ -v --tb=short \
+            --cov=src --cov-report=term-missing \
+            --cov-report=xml:coverage.xml
+        env:
+          OPENAI_API_KEY: sk-fake-key-for-tests
+          POSTGRES_PASSWORD: testpassword
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for build
+        run: |
+          printf "OPENAI_API_KEY=sk-fake\n" >> .env
+          printf "POSTGRES_PASSWORD=testpassword\n" >> .env
+          printf "POSTGRES_USER=content\n" >> .env
+          printf "POSTGRES_DB=content_pipeline\n" >> .env
+
+      - name: Build API image
+        run: docker compose -p content-pipeline build api
+
+      - name: Build Dagster image
+        run: docker compose -p content-pipeline build dagster
