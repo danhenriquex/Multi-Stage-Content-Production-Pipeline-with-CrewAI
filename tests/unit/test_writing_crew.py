@@ -1,12 +1,14 @@
 """Unit tests for writing crew — all LLM/API calls mocked."""
 
-import pytest
 from unittest.mock import MagicMock, patch
-from src.shared.models import CampaignBrief, ResearchReport, ContentPackage
+
+import pytest
+
+from src.shared.models import CampaignBrief, ContentPackage, ResearchReport
 from src.writing_crew.crew import (
     _parse_blog,
-    _parse_social,
     _parse_emails,
+    _parse_social,
     _research_context,
 )
 
@@ -247,9 +249,7 @@ class TestRunWritingCrew:
     @patch("src.writing_crew.crew.mlflow")
     @patch("src.writing_crew.crew.Crew")
     @patch("src.writing_crew.crew.ChatOpenAI")
-    def test_failed_run_saves_error(
-        self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec
-    ):
+    def test_failed_run_saves_error(self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec):
         from src.writing_crew.crew import run_writing_crew
 
         mock_crew = MagicMock()

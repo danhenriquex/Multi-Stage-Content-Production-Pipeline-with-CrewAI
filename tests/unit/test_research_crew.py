@@ -1,10 +1,11 @@
 """Unit tests for research crew — all LLM/API calls mocked."""
 
-import pytest
 from unittest.mock import MagicMock, patch
-from src.shared.models import CampaignBrief, ResearchReport
-from src.research_crew.crew import _parse_research_output
 
+import pytest
+
+from src.research_crew.crew import _parse_research_output
+from src.shared.models import CampaignBrief, ResearchReport
 
 SAMPLE_BRIEF = CampaignBrief(
     title="AI CRM Launch",
@@ -53,10 +54,7 @@ class TestParseResearchOutput:
     def test_extracts_competitors(self):
         report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
         assert len(report.competitors) > 0
-        assert any(
-            "Salesforce" in c["name"] or "HubSpot" in c["name"]
-            for c in report.competitors
-        )
+        assert any("Salesforce" in c["name"] or "HubSpot" in c["name"] for c in report.competitors)
 
     def test_extracts_trends(self):
         report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
@@ -73,9 +71,7 @@ class TestParseResearchOutput:
         assert report.key_insights == []
 
     def test_limits_insights_to_ten(self):
-        long_output = "\n".join(
-            [f"- Insight number {i} with enough detail here" for i in range(20)]
-        )
+        long_output = "\n".join([f"- Insight number {i} with enough detail here" for i in range(20)])
         report = _parse_research_output("test-id", long_output, SAMPLE_BRIEF)
         assert len(report.key_insights) <= 10
 
@@ -88,14 +84,15 @@ class TestParseResearchOutput:
 class TestResearchCrewAgents:
     def test_agents_have_required_fields(self):
         from src.research_crew.crew import (
-            _market_research_agent,
             _competitor_analysis_agent,
-            _trend_scout_agent,
             _manager_agent,
+            _market_research_agent,
+            _trend_scout_agent,
         )
 
-        with patch("src.research_crew.crew.ChatOpenAI"), patch(
-            "src.research_crew.crew.TavilySearchResults"
+        with (
+            patch("src.research_crew.crew.ChatOpenAI"),
+            patch("src.research_crew.crew.TavilySearchResults"),
         ):
             market = _market_research_agent()
             assert market.role != ""
@@ -113,12 +110,13 @@ class TestResearchCrewAgents:
 
     def test_tasks_include_brief_context(self):
         from src.research_crew.crew import (
-            _market_research_task,
             _competitor_analysis_task,
+            _market_research_task,
         )
 
-        with patch("src.research_crew.crew.ChatOpenAI"), patch(
-            "src.research_crew.crew.TavilySearchResults"
+        with (
+            patch("src.research_crew.crew.ChatOpenAI"),
+            patch("src.research_crew.crew.TavilySearchResults"),
         ):
             from src.research_crew.crew import _market_research_agent
 
@@ -139,9 +137,7 @@ class TestRunResearchCrew:
     @patch("src.research_crew.crew.Crew")
     @patch("src.research_crew.crew.TavilySearchResults")
     @patch("src.research_crew.crew.ChatOpenAI")
-    def test_successful_run_returns_report(
-        self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save
-    ):
+    def test_successful_run_returns_report(self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save):
         from src.research_crew.crew import run_research_crew
 
         mock_crew = MagicMock()
@@ -166,9 +162,7 @@ class TestRunResearchCrew:
     @patch("src.research_crew.crew.Crew")
     @patch("src.research_crew.crew.TavilySearchResults")
     @patch("src.research_crew.crew.ChatOpenAI")
-    def test_failed_run_saves_error(
-        self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save
-    ):
+    def test_failed_run_saves_error(self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save):
         from src.research_crew.crew import run_research_crew
 
         mock_crew = MagicMock()

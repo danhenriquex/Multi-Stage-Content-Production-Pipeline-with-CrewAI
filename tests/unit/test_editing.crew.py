@@ -1,14 +1,16 @@
 """Unit tests for editing crew — all LLM calls mocked."""
 
-import pytest
 from unittest.mock import MagicMock, patch
-from src.shared.models import CampaignBrief, ContentDraft, ContentPackage, QualityScores
+
+import pytest
+
 from src.editing_crew.crew import (
+    _compute_brand_voice_score,
     _compute_readability,
     _compute_seo_score,
-    _compute_brand_voice_score,
     _score_package,
 )
+from src.shared.models import CampaignBrief, ContentDraft, ContentPackage, QualityScores
 
 SAMPLE_BRIEF = CampaignBrief(
     title="AI CRM Launch",
@@ -65,7 +67,11 @@ SAMPLE_EMAIL = ContentDraft(
     campaign_id="test-123",
     content_type="email",
     title="Email — Awareness",
-    content="SUBJECT: The CRM problem nobody talks about\nBODY: Most teams waste time on data entry...\nCTA: Learn more",
+    content=(
+        "SUBJECT: The CRM problem nobody talks about\n"
+        "BODY: Most teams waste time on data entry...\n"
+        "CTA: Learn more"
+    ),
     metadata={"stage": "awareness"},
 )
 
@@ -94,7 +100,10 @@ class TestComputeReadability:
 
     def test_simple_text_scores_higher(self):
         simple = "The cat sat on the mat. It was a good cat."
-        complex_text = "The implementation of sophisticated technological paradigms necessitates comprehensive organizational restructuring."
+        complex_text = (
+            "The implementation of sophisticated technological paradigms"
+            " necessitates comprehensive organizational restructuring."
+        )
         assert _compute_readability(simple) > _compute_readability(complex_text)
 
 
@@ -106,9 +115,7 @@ class TestComputeSeoScore:
         assert score > 70
 
     def test_no_keywords_scores_zero(self):
-        score = _compute_seo_score(
-            "Some content with no relevant terms", ["AI CRM", "SMB"]
-        )
+        score = _compute_seo_score("Some content with no relevant terms", ["AI CRM", "SMB"])
         assert score == 0.0
 
     def test_empty_keywords_returns_zero(self):
@@ -138,16 +145,12 @@ class TestComputeBrandVoiceScore:
     def test_jargon_heavy_content_scores_lower(self):
         clean = "You can set up your CRM in minutes."
         jargon = "Leverage synergy to utilize holistic paradigms and robust scalable solutions."
-        assert _compute_brand_voice_score(clean, None) > _compute_brand_voice_score(
-            jargon, None
-        )
+        assert _compute_brand_voice_score(clean, None) > _compute_brand_voice_score(jargon, None)
 
     def test_hedging_language_penalized(self):
         clean = "This works well for your team."
         hedging = "This might possibly work well in some cases for your team perhaps."
-        assert _compute_brand_voice_score(clean, None) > _compute_brand_voice_score(
-            hedging, None
-        )
+        assert _compute_brand_voice_score(clean, None) > _compute_brand_voice_score(hedging, None)
 
     def test_empty_content_returns_zero(self):
         score = _compute_brand_voice_score("", None)
@@ -252,9 +255,7 @@ class TestRunEditingCrew:
     @patch("src.editing_crew.crew.mlflow")
     @patch("src.editing_crew.crew.Crew")
     @patch("src.editing_crew.crew.ChatOpenAI")
-    def test_failed_run_saves_error(
-        self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec
-    ):
+    def test_failed_run_saves_error(self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec):
         from src.editing_crew.crew import run_editing_crew
 
         mock_crew = MagicMock()

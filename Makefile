@@ -14,6 +14,7 @@ init: ## First-time setup: run scripts/init.sh
 install: ## Install Python dependencies via uv
 	uv venv --python 3.11
 	uv pip install -e ".[dev]"
+	@echo "✓ Dependencies installed — pytest available at $$(uv run which pytest)"
 
 # ── Docker ──────────────────────────────────────────────────────────────────
 

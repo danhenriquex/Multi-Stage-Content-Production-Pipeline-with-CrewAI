@@ -1,12 +1,11 @@
 import psycopg2
 import psycopg2.extras
+
 from src.shared.config import settings
 
 
 def get_db():
-    return psycopg2.connect(
-        settings.postgres_url, cursor_factory=psycopg2.extras.RealDictCursor
-    )
+    return psycopg2.connect(settings.postgres_url, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def save_campaign(campaign_id: str, brief: dict) -> None:
@@ -48,9 +47,7 @@ def update_campaign_status(campaign_id: str, status: str) -> None:
         conn.close()
 
 
-def save_content_piece(
-    campaign_id: str, content_type: str, title: str, content: str, metadata: dict
-) -> str:
+def save_content_piece(campaign_id: str, content_type: str, title: str, content: str, metadata: dict) -> str:
     conn = get_db()
     try:
         with conn.cursor() as cur:

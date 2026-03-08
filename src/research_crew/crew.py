@@ -50,9 +50,7 @@ def _search_tool():
 
     class DuckDuckGoTool(BaseTool):
         name: str = "DuckDuckGo Search"
-        description: str = (
-            "Search the web using DuckDuckGo. Input should be a search query string."
-        )
+        description: str = "Search the web using DuckDuckGo. Input should be a search query string."
 
         def _run(self, query: str) -> str:
             from ddgs import DDGS
@@ -363,9 +361,7 @@ def run_research_crew(campaign_id: str, brief: CampaignBrief) -> ResearchReport:
             raise
 
 
-def _parse_research_output(
-    campaign_id: str, raw_output: str, brief: CampaignBrief
-) -> ResearchReport:
+def _parse_research_output(campaign_id: str, raw_output: str, brief: CampaignBrief) -> ResearchReport:
     """Extract structured fields from the crew's text output."""
     lines = raw_output.split("\n")
 
@@ -381,12 +377,7 @@ def _parse_research_output(
             continue
 
         # Market size — look for $ figures
-        if "$" in line and (
-            "billion" in line.lower()
-            or "million" in line.lower()
-            or "TAM" in line
-            or "SAM" in line
-        ):
+        if "$" in line and ("billion" in line.lower() or "million" in line.lower() or "TAM" in line or "SAM" in line):
             if not market_size:
                 market_size = line
 
@@ -397,16 +388,11 @@ def _parse_research_output(
                 insights.append(content)
 
         # Numbered items that mention competitors
-        if any(
-            comp in line
-            for comp in ["Salesforce", "HubSpot", "Pipedrive", "Zoho", "Monday"]
-        ):
+        if any(comp in line for comp in ["Salesforce", "HubSpot", "Pipedrive", "Zoho", "Monday"]):
             competitors.append({"name": line[:50], "description": line})
 
         # Trend lines
-        if any(
-            word in line.lower() for word in ["trend", "emerging", "growing", "shift"]
-        ):
+        if any(word in line.lower() for word in ["trend", "emerging", "growing", "shift"]):
             if len(line) > 20:
                 trends.append(line)
 

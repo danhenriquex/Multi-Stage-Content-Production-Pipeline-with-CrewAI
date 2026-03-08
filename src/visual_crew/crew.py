@@ -124,9 +124,7 @@ def _content_summary(package: ContentPackage, brief: CampaignBrief) -> str:
         summary_parts.append(f"- LinkedIn Post: {first_line}")
 
     if package.email_variants:
-        summary_parts.append(
-            f"- Email Campaign: {len(package.email_variants)} variants"
-        )
+        summary_parts.append(f"- Email Campaign: {len(package.email_variants)} variants")
         for email in package.email_variants:
             stage = email.metadata.get("stage", "unknown")
             subject = email.metadata.get("subject", "")
@@ -138,9 +136,7 @@ def _content_summary(package: ContentPackage, brief: CampaignBrief) -> str:
 # ── Tasks ─────────────────────────────────────────────────────────────────────
 
 
-def _visual_strategy_task(
-    agent: Agent, brief: CampaignBrief, package: ContentPackage
-) -> Task:
+def _visual_strategy_task(agent: Agent, brief: CampaignBrief, package: ContentPackage) -> Task:
     content_ctx = _content_summary(package, brief)
     return Task(
         description=f"""
@@ -194,9 +190,7 @@ Format as a clean, structured Markdown document a designer can hand off directly
     )
 
 
-def _asset_list_task(
-    agent: Agent, brief: CampaignBrief, package: ContentPackage
-) -> Task:
+def _asset_list_task(agent: Agent, brief: CampaignBrief, package: ContentPackage) -> Task:
     content_ctx = _content_summary(package, brief)
     return Task(
         description=f"""

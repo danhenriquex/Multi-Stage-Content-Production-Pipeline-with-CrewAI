@@ -4,6 +4,7 @@ Dependency chain: research → writing → editing → visual
 """
 
 import dagster as dg
+
 from src.shared.models import CampaignBrief, ContentPackage, ResearchReport
 
 

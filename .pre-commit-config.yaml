@@ -26,3 +26,4 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
+        additional_dependencies: []

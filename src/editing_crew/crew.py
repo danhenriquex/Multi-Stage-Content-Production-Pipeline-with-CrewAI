@@ -152,8 +152,7 @@ Preserve all formatting (Markdown headers, numbered tweets, etc.)
 """,
         agent=agent,
         expected_output=(
-            f"The fully edited {piece.content_type} with all issues fixed, "
-            "preserving original format and structure."
+            f"The fully edited {piece.content_type} with all issues fixed, " "preserving original format and structure."
         ),
     )
 
@@ -251,8 +250,7 @@ Return the FULL optimized blog post followed by the SEO NOTES section.
 """,
         agent=agent,
         expected_output=(
-            "The fully SEO-optimized blog post with natural keyword placement "
-            "and a SEO NOTES section at the end."
+            "The fully SEO-optimized blog post with natural keyword placement " "and a SEO NOTES section at the end."
         ),
     )
 
@@ -340,9 +338,7 @@ def _compute_brand_voice_score(content: str, brand_voice: Optional[str]) -> floa
     return round(1.0 - penalty_rate, 3)
 
 
-def _score_package(
-    package: ContentPackage, brief: CampaignBrief
-) -> dict[str, QualityScores]:
+def _score_package(package: ContentPackage, brief: CampaignBrief) -> dict[str, QualityScores]:
     """Compute quality scores for each content piece."""
     scores = {}
 
@@ -360,9 +356,7 @@ def _score_package(
         scores[name] = QualityScores(
             readability=_compute_readability(piece.content),
             seo_score=_compute_seo_score(piece.content, brief.keywords),
-            brand_voice_match=_compute_brand_voice_score(
-                piece.content, brief.brand_voice
-            ),
+            brand_voice_match=_compute_brand_voice_score(piece.content, brief.brand_voice),
         )
 
     return scores
@@ -435,19 +429,9 @@ def run_editing_crew(
 
         try:
             # Edit each piece
-            polished_blog = (
-                _edit_piece(drafts.blog_post, brief) if drafts.blog_post else None
-            )
-            polished_twitter = (
-                _edit_piece(drafts.twitter_thread, brief)
-                if drafts.twitter_thread
-                else None
-            )
-            polished_linkedin = (
-                _edit_piece(drafts.linkedin_post, brief)
-                if drafts.linkedin_post
-                else None
-            )
+            polished_blog = _edit_piece(drafts.blog_post, brief) if drafts.blog_post else None
+            polished_twitter = _edit_piece(drafts.twitter_thread, brief) if drafts.twitter_thread else None
+            polished_linkedin = _edit_piece(drafts.linkedin_post, brief) if drafts.linkedin_post else None
             polished_emails = [_edit_piece(e, brief) for e in drafts.email_variants]
 
             polished = ContentPackage(
@@ -464,13 +448,9 @@ def run_editing_crew(
 
             # Log aggregate metrics to MLflow
             if scores:
-                avg_readability = sum(s.readability for s in scores.values()) / len(
-                    scores
-                )
+                avg_readability = sum(s.readability for s in scores.values()) / len(scores)
                 avg_seo = sum(s.seo_score for s in scores.values()) / len(scores)
-                avg_brand_voice = sum(
-                    s.brand_voice_match for s in scores.values()
-                ) / len(scores)
+                avg_brand_voice = sum(s.brand_voice_match for s in scores.values()) / len(scores)
 
                 mlflow.log_metrics(
                     {
@@ -522,9 +502,7 @@ def run_editing_crew(
                         piece.metadata,
                     )
             for email in polished_emails:
-                save_content_piece(
-                    campaign_id, "email", email.title, email.content, email.metadata
-                )
+                save_content_piece(campaign_id, "email", email.title, email.content, email.metadata)
 
             mlflow.set_tag("status", "success")
             save_crew_execution(

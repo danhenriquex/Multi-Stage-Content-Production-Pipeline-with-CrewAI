@@ -165,9 +165,7 @@ FULL RESEARCH REPORT:
 # ── Tasks ─────────────────────────────────────────────────────────────────────
 
 
-def _blog_post_task(
-    agent: Agent, brief: CampaignBrief, research: ResearchReport
-) -> Task:
+def _blog_post_task(agent: Agent, brief: CampaignBrief, research: ResearchReport) -> Task:
     context = _research_context(research, brief)
     return Task(
         description=f"""
@@ -198,9 +196,7 @@ Write the FULL post — do not summarize or outline.
     )
 
 
-def _social_media_task(
-    agent: Agent, brief: CampaignBrief, research: ResearchReport
-) -> Task:
+def _social_media_task(agent: Agent, brief: CampaignBrief, research: ResearchReport) -> Task:
     context = _research_context(research, brief)
     return Task(
         description=f"""
@@ -229,15 +225,12 @@ Format clearly with "TWITTER THREAD:" and "LINKEDIN POST:" headers.
 """,
         agent=agent,
         expected_output=(
-            "A Twitter/X thread with 8 numbered tweets and a LinkedIn post "
-            "with hook, body, question, and hashtags."
+            "A Twitter/X thread with 8 numbered tweets and a LinkedIn post " "with hook, body, question, and hashtags."
         ),
     )
 
 
-def _email_campaign_task(
-    agent: Agent, brief: CampaignBrief, research: ResearchReport
-) -> Task:
+def _email_campaign_task(agent: Agent, brief: CampaignBrief, research: ResearchReport) -> Task:
     context = _research_context(research, brief)
     return Task(
         description=f"""
@@ -391,9 +384,7 @@ def _parse_emails(campaign_id: str, raw: str) -> list[ContentDraft]:
                 ContentDraft(
                     campaign_id=campaign_id,
                     content_type="email",
-                    title=f"Email — {stage.title()} ({subject[:50]})"
-                    if subject
-                    else f"Email — {stage.title()}",
+                    title=f"Email — {stage.title()} ({subject[:50]})" if subject else f"Email — {stage.title()}",
                     content=content,
                     metadata={"stage": stage, "subject": subject},
                 )
@@ -485,9 +476,7 @@ def run_writing_crew(
                 linkedin.metadata,
             )
             for email in email_drafts:
-                save_content_piece(
-                    campaign_id, "email", email.title, email.content, email.metadata
-                )
+                save_content_piece(campaign_id, "email", email.title, email.content, email.metadata)
 
             elapsed = time.time() - start
             package = ContentPackage(
