@@ -1,4 +1,4 @@
-# 🎯 Multi-Stage Content Production Pipeline
+# Multi-Stage Content Production Pipeline
 
 An end-to-end AI content creation system where specialized CrewAI agents collaborate to produce publication-ready marketing materials from a single campaign brief.
 
