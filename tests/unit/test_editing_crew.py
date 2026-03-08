@@ -68,9 +68,7 @@ SAMPLE_EMAIL = ContentDraft(
     content_type="email",
     title="Email — Awareness",
     content=(
-        "SUBJECT: The CRM problem nobody talks about\n"
-        "BODY: Most teams waste time on data entry...\n"
-        "CTA: Learn more"
+        "SUBJECT: The CRM problem nobody talks about\nBODY: Most teams waste time on data entry...\nCTA: Learn more"
     ),
     metadata={"stage": "awareness"},
 )

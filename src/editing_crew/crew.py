@@ -152,7 +152,7 @@ Preserve all formatting (Markdown headers, numbered tweets, etc.)
 """,
         agent=agent,
         expected_output=(
-            f"The fully edited {piece.content_type} with all issues fixed, " "preserving original format and structure."
+            f"The fully edited {piece.content_type} with all issues fixed, preserving original format and structure."
         ),
     )
 
@@ -250,7 +250,7 @@ Return the FULL optimized blog post followed by the SEO NOTES section.
 """,
         agent=agent,
         expected_output=(
-            "The fully SEO-optimized blog post with natural keyword placement " "and a SEO NOTES section at the end."
+            "The fully SEO-optimized blog post with natural keyword placement and a SEO NOTES section at the end."
         ),
     )
 

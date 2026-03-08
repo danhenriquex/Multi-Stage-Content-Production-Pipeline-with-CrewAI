@@ -225,7 +225,7 @@ Format clearly with "TWITTER THREAD:" and "LINKEDIN POST:" headers.
 """,
         agent=agent,
         expected_output=(
-            "A Twitter/X thread with 8 numbered tweets and a LinkedIn post " "with hook, body, question, and hashtags."
+            "A Twitter/X thread with 8 numbered tweets and a LinkedIn post with hook, body, question, and hashtags."
         ),
     )
 
