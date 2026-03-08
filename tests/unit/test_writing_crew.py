@@ -248,11 +248,21 @@ class TestRunWritingCrew:
     @patch("src.writing_crew.crew.save_content_piece")
     @patch("src.writing_crew.crew.mlflow")
     @patch("src.writing_crew.crew._run_blog_crew")
+    @patch("src.writing_crew.crew._run_social_crew")
     @patch("src.writing_crew.crew.ChatOpenAI")
-    def test_failed_run_saves_error(self, mock_llm, mock_run_blog_crew, mock_mlflow, mock_save_piece, mock_save_exec):
+    def test_failed_run_saves_error(
+        self,
+        mock_llm,
+        mock_social,
+        mock_blog,
+        mock_mlflow,
+        mock_save_piece,
+        mock_save_exec,
+    ):
         from src.writing_crew.crew import run_writing_crew
 
-        mock_run_blog_crew.side_effect = Exception("Rate limit exceeded")
+        mock_blog.side_effect = Exception("Rate limit exceeded")
+        mock_social.side_effect = Exception("Rate limit exceeded")
 
         mock_run = MagicMock()
         mock_run.__enter__ = MagicMock(return_value=mock_run)

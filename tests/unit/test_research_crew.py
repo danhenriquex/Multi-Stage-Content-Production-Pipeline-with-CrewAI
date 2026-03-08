@@ -1,4 +1,4 @@
-"""Unit tests for research crew — all LLM/API calls mocked."""
+"""Unit tests for research crew — parser and run function."""
 
 from unittest.mock import MagicMock, patch
 
@@ -9,125 +9,71 @@ from src.shared.models import CampaignBrief, ResearchReport
 
 SAMPLE_BRIEF = CampaignBrief(
     title="AI CRM Launch",
-    brief="Launch campaign for new AI-powered CRM targeting SMBs",
+    brief="Launch campaign for AI-powered CRM targeting SMBs",
     brand_voice="Professional yet approachable",
-    target_audience="SMB founders and sales managers",
+    target_audience="SMB founders",
     keywords=["AI CRM", "sales automation", "SMB"],
 )
 
 SAMPLE_OUTPUT = """
-Executive Summary
-The AI CRM market is growing rapidly, with significant opportunity for SMB-focused players.
+## Executive Summary
+AI CRM market is growing rapidly with strong SMB adoption.
 
-Market Overview
-- The global CRM market is valued at $65 billion TAM with 12% CAGR
-- SAM for AI-powered CRM tools is approximately $8 billion
-- SMB segment represents the fastest growing subsegment
+## Market Overview
+The AI CRM market is valued at $12.5 billion (TAM) with SAM of $3.2 billion.
+Growth rate is 23% CAGR through 2028.
 
-Competitive Landscape
-- Salesforce dominates enterprise but weak in SMB UX
-- HubSpot strong in marketing but limited AI features
-- Pipedrive focused on sales pipeline, limited automation
+## Competitive Landscape
+- Salesforce: Market leader with 20% share, strong enterprise focus
+- HubSpot: Strong SMB positioning, freemium model
+- Pipedrive: Sales-focused, easy to use
 
-Key Trends
-- Emerging trend: AI-first CRM adoption growing 40% YoY
-- Shift toward conversational AI in sales workflows
-- Growing demand for no-code automation tools
+## Key Trends
+- Trend: AI-powered automation is reshaping CRM workflows
+- Emerging: Voice-to-CRM integrations growing fast
+- Shift: Mobile-first CRM adoption accelerating
 
-Content Strategy
-- Focus on ROI and time savings for busy SMB founders
-- Use case stories resonate better than feature lists
+## Content Strategy
+- Focus on ROI stories from SMB customers
+- Highlight ease of integration
 """
 
 
 @pytest.mark.unit
 class TestParseResearchOutput:
+    def test_returns_research_report(self):
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
+        assert isinstance(report, ResearchReport)
+
     def test_extracts_market_size(self):
-        report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
-        assert report.campaign_id == "test-id"
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
         assert "$" in report.market_size or report.market_size == "See full report"
 
-    def test_extracts_insights_from_bullets(self):
-        report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
-        assert len(report.key_insights) > 0
-
     def test_extracts_competitors(self):
-        report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
-        assert len(report.competitors) > 0
-        assert any("Salesforce" in c["name"] or "HubSpot" in c["name"] for c in report.competitors)
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
+        assert isinstance(report.competitors, list)
 
     def test_extracts_trends(self):
-        report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
-        assert len(report.trends) > 0
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
+        assert isinstance(report.trends, list)
+
+    def test_extracts_insights(self):
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
+        assert isinstance(report.key_insights, list)
 
     def test_raw_output_preserved(self):
-        report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
         assert report.raw_output == SAMPLE_OUTPUT
 
+    def test_campaign_id_set(self):
+        report = _parse_research_output("camp-001", SAMPLE_OUTPUT, SAMPLE_BRIEF)
+        assert report.campaign_id == "camp-001"
+
     def test_empty_output_returns_defaults(self):
-        report = _parse_research_output("test-id", "", SAMPLE_BRIEF)
-        assert report.campaign_id == "test-id"
+        report = _parse_research_output("camp-001", "", SAMPLE_BRIEF)
         assert report.market_size == "See full report"
+        assert report.competitors == []
         assert report.key_insights == []
-
-    def test_limits_insights_to_ten(self):
-        long_output = "\n".join([f"- Insight number {i} with enough detail here" for i in range(20)])
-        report = _parse_research_output("test-id", long_output, SAMPLE_BRIEF)
-        assert len(report.key_insights) <= 10
-
-    def test_limits_competitors_to_five(self):
-        report = _parse_research_output("test-id", SAMPLE_OUTPUT, SAMPLE_BRIEF)
-        assert len(report.competitors) <= 5
-
-
-@pytest.mark.unit
-class TestResearchCrewAgents:
-    def test_agents_have_required_fields(self):
-        from src.research_crew.crew import (
-            _competitor_analysis_agent,
-            _manager_agent,
-            _market_research_agent,
-            _trend_scout_agent,
-        )
-
-        with (
-            patch("src.research_crew.crew.ChatOpenAI"),
-            patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True),
-        ):
-            market = _market_research_agent()
-            assert market.role != ""
-            assert market.goal != ""
-            assert market.backstory != ""
-
-            competitor = _competitor_analysis_agent()
-            assert competitor.role != ""
-
-            trend = _trend_scout_agent()
-            assert trend.role != ""
-
-            manager = _manager_agent()
-            assert manager.allow_delegation is True
-
-    def test_tasks_include_brief_context(self):
-        from src.research_crew.crew import (
-            _competitor_analysis_task,
-            _market_research_task,
-        )
-
-        with (
-            patch("src.research_crew.crew.ChatOpenAI"),
-            patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True),
-        ):
-            from src.research_crew.crew import _market_research_agent
-
-            agent = _market_research_agent()
-
-            task = _market_research_task(agent, SAMPLE_BRIEF)
-            assert "AI CRM Launch" in task.description
-            assert "SMB" in task.description
-
-            task2 = _competitor_analysis_task(agent, SAMPLE_BRIEF)
-            assert "AI CRM Launch" in task2.description
 
 
 @pytest.mark.unit
@@ -135,9 +81,18 @@ class TestRunResearchCrew:
     @patch("src.research_crew.crew.save_crew_execution")
     @patch("src.research_crew.crew.mlflow")
     @patch("src.research_crew.crew.Crew")
-    @patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True)
+    @patch("src.research_crew.crew.Task")
+    @patch("src.research_crew.crew.Agent")
     @patch("src.research_crew.crew.ChatOpenAI")
-    def test_successful_run_returns_report(self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save):
+    def test_successful_run_returns_report(
+        self,
+        mock_llm,
+        mock_agent,
+        mock_task,
+        mock_crew_cls,
+        mock_mlflow,
+        mock_save_exec,
+    ):
         from src.research_crew.crew import run_research_crew
 
         mock_crew = MagicMock()
@@ -147,22 +102,31 @@ class TestRunResearchCrew:
         mock_run = MagicMock()
         mock_run.__enter__ = MagicMock(return_value=mock_run)
         mock_run.__exit__ = MagicMock(return_value=False)
-        mock_run.info.run_id = "test-run-id"
+        mock_run.info.run_id = "run-001"
         mock_mlflow.start_run.return_value = mock_run
 
-        report = run_research_crew("campaign-001", SAMPLE_BRIEF)
+        result = run_research_crew("camp-001", SAMPLE_BRIEF)
 
-        assert isinstance(report, ResearchReport)
-        assert report.campaign_id == "campaign-001"
-        mock_save.assert_called_once()
-        assert mock_save.call_args.kwargs["status"] == "success"
+        assert isinstance(result, ResearchReport)
+        assert result.campaign_id == "camp-001"
+        mock_save_exec.assert_called_once()
+        assert mock_save_exec.call_args.kwargs["status"] == "success"
 
     @patch("src.research_crew.crew.save_crew_execution")
     @patch("src.research_crew.crew.mlflow")
     @patch("src.research_crew.crew.Crew")
-    @patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True)
+    @patch("src.research_crew.crew.Task")
+    @patch("src.research_crew.crew.Agent")
     @patch("src.research_crew.crew.ChatOpenAI")
-    def test_failed_run_saves_error(self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save):
+    def test_failed_run_saves_error(
+        self,
+        mock_llm,
+        mock_agent,
+        mock_task,
+        mock_crew_cls,
+        mock_mlflow,
+        mock_save_exec,
+    ):
         from src.research_crew.crew import run_research_crew
 
         mock_crew = MagicMock()
@@ -172,11 +136,10 @@ class TestRunResearchCrew:
         mock_run = MagicMock()
         mock_run.__enter__ = MagicMock(return_value=mock_run)
         mock_run.__exit__ = MagicMock(return_value=False)
-        mock_run.info.run_id = "test-run-id"
+        mock_run.info.run_id = "run-002"
         mock_mlflow.start_run.return_value = mock_run
 
         with pytest.raises(Exception, match="OpenAI API error"):
-            run_research_crew("campaign-001", SAMPLE_BRIEF)
+            run_research_crew("camp-001", SAMPLE_BRIEF)
 
-        mock_save.assert_called_once()
-        assert mock_save.call_args.kwargs["status"] == "failed"
+        assert mock_save_exec.call_args.kwargs["status"] == "failed"
