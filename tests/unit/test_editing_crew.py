@@ -68,7 +68,9 @@ SAMPLE_EMAIL = ContentDraft(
     content_type="email",
     title="Email — Awareness",
     content=(
-        "SUBJECT: The CRM problem nobody talks about\nBODY: Most teams waste time on data entry...\nCTA: Learn more"
+        "SUBJECT: The CRM problem nobody talks about\n"
+        "BODY: Most teams waste time on data entry...\n"
+        "CTA: Learn more"
     ),
     metadata={"stage": "awareness"},
 )
@@ -198,9 +200,16 @@ class TestRunEditingCrew:
     @patch("src.editing_crew.crew.save_content_piece")
     @patch("src.editing_crew.crew.mlflow")
     @patch("src.editing_crew.crew.Crew")
+    @patch("src.editing_crew.crew.Agent")
     @patch("src.editing_crew.crew.ChatOpenAI")
     def test_successful_run_returns_package(
-        self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec
+        self,
+        mock_llm,
+        mock_agent,
+        mock_crew_cls,
+        mock_mlflow,
+        mock_save_piece,
+        mock_save_exec,
     ):
         from src.editing_crew.crew import run_editing_crew
 
@@ -227,9 +236,16 @@ class TestRunEditingCrew:
     @patch("src.editing_crew.crew.save_content_piece")
     @patch("src.editing_crew.crew.mlflow")
     @patch("src.editing_crew.crew.Crew")
+    @patch("src.editing_crew.crew.Agent")
     @patch("src.editing_crew.crew.ChatOpenAI")
     def test_edited_pieces_have_version_incremented(
-        self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec
+        self,
+        mock_llm,
+        mock_agent,
+        mock_crew_cls,
+        mock_mlflow,
+        mock_save_piece,
+        mock_save_exec,
     ):
         from src.editing_crew.crew import run_editing_crew
 
@@ -252,8 +268,17 @@ class TestRunEditingCrew:
     @patch("src.editing_crew.crew.save_content_piece")
     @patch("src.editing_crew.crew.mlflow")
     @patch("src.editing_crew.crew.Crew")
+    @patch("src.editing_crew.crew.Agent")
     @patch("src.editing_crew.crew.ChatOpenAI")
-    def test_failed_run_saves_error(self, mock_llm, mock_crew_cls, mock_mlflow, mock_save_piece, mock_save_exec):
+    def test_failed_run_saves_error(
+        self,
+        mock_llm,
+        mock_agent,
+        mock_crew_cls,
+        mock_mlflow,
+        mock_save_piece,
+        mock_save_exec,
+    ):
         from src.editing_crew.crew import run_editing_crew
 
         mock_crew = MagicMock()

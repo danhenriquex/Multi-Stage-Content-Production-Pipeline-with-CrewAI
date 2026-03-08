@@ -92,7 +92,7 @@ class TestResearchCrewAgents:
 
         with (
             patch("src.research_crew.crew.ChatOpenAI"),
-            patch("src.research_crew.crew.TavilySearchResults"),
+            patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True),
         ):
             market = _market_research_agent()
             assert market.role != ""
@@ -116,7 +116,7 @@ class TestResearchCrewAgents:
 
         with (
             patch("src.research_crew.crew.ChatOpenAI"),
-            patch("src.research_crew.crew.TavilySearchResults"),
+            patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True),
         ):
             from src.research_crew.crew import _market_research_agent
 
@@ -135,7 +135,7 @@ class TestRunResearchCrew:
     @patch("src.research_crew.crew.save_crew_execution")
     @patch("src.research_crew.crew.mlflow")
     @patch("src.research_crew.crew.Crew")
-    @patch("src.research_crew.crew.TavilySearchResults")
+    @patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True)
     @patch("src.research_crew.crew.ChatOpenAI")
     def test_successful_run_returns_report(self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save):
         from src.research_crew.crew import run_research_crew
@@ -160,7 +160,7 @@ class TestRunResearchCrew:
     @patch("src.research_crew.crew.save_crew_execution")
     @patch("src.research_crew.crew.mlflow")
     @patch("src.research_crew.crew.Crew")
-    @patch("src.research_crew.crew.TavilySearchResults")
+    @patch("src.research_crew.crew.DuckDuckGoSearchRun", create=True)
     @patch("src.research_crew.crew.ChatOpenAI")
     def test_failed_run_saves_error(self, mock_llm, mock_tavily, mock_crew_cls, mock_mlflow, mock_save):
         from src.research_crew.crew import run_research_crew
