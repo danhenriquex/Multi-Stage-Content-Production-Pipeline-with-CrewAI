@@ -119,7 +119,7 @@ class TestComputeSeoScore:
 class TestComputeBrandVoiceScore:
     def test_clean_content_scores_high(self):
         clean = "Our AI CRM delivers measurable results for SMB sales teams."
-        score = _compute_brand_voice_score(clean)
+        score = _compute_brand_voice_score(clean, "Professional")
         assert score > 0.7
 
     def test_jargon_heavy_content_scores_lower(self):
@@ -128,10 +128,10 @@ class TestComputeBrandVoiceScore:
             "and streamline end-to-end deliverables for stakeholders."
         )
         clean = "Our product helps sales teams close more deals faster."
-        assert _compute_brand_voice_score(jargon) < _compute_brand_voice_score(clean)
+        assert _compute_brand_voice_score(jargon, "Professional") < _compute_brand_voice_score(clean, "Professional")
 
     def test_returns_float_between_0_and_1(self):
-        score = _compute_brand_voice_score(SAMPLE_BLOG.content)
+        score = _compute_brand_voice_score(SAMPLE_BLOG.content, "Professional")
         assert 0.0 <= score <= 1.0
 
 
